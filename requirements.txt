@@ -1,0 +1,5 @@
+Jinja2==2.10.3
+requests==2.22.0
+
+# For development only
+black==19.10b0
