@@ -2,15 +2,17 @@ import argparse
 import os
 import subprocess
 from datetime import datetime
+from pathlib import Path
 
+import cairosvg
 import jinja2
 import requests
 
 
-BASE_DIR = os.path.abspath(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = Path(os.path.abspath(os.path.dirname(__file__)))
 
 ENV = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(os.path.join(BASE_DIR, "templates")),
+    loader=jinja2.FileSystemLoader(BASE_DIR / "templates"),
     autoescape=jinja2.select_autoescape(["html", "xml"]),
 )
 
@@ -93,7 +95,7 @@ RENAME_SETS = {
 
 class LabelGenerator:
 
-    DEFAULT_OUTPUT_DIR = os.path.join(BASE_DIR, "output")
+    DEFAULT_OUTPUT_DIR = BASE_DIR / "output"
 
     COLS = 4
     ROWS = 15
@@ -118,7 +120,7 @@ class LabelGenerator:
         self.delta_x = (self.width - (2 * self.MARGIN)) / self.COLS
         self.delta_y = (self.height - (2 * self.MARGIN)) / self.ROWS
 
-        self.output_dir = output_dir or DEFAULT_OUTPUT_DIR
+        self.output_dir = Path(output_dir or DEFAULT_OUTPUT_DIR)
 
         # Set data from scryfall
         self.set_data = self.get_set_data()
@@ -140,12 +142,20 @@ class LabelGenerator:
                 WIDTH=self.width,
                 HEIGHT=self.height,
             )
-            outfile = os.path.join(
-                self.output_dir, f"labels-{self.paper_size}-{page:02}.svg"
+            outfile_svg = self.output_dir / f"labels-{self.paper_size}-{page:02}.svg"
+            outfile_pdf = str(
+                self.output_dir / f"labels-{self.paper_size}-{page:02}.pdf"
             )
-            print(f"Writing {outfile}...")
-            with open(outfile, "w") as fd:
+
+            print(f"Writing {outfile_svg}...")
+            with open(outfile_svg, "w") as fd:
                 fd.write(output)
+
+            print(f"Writing {outfile_pdf}...")
+            with open(outfile_svg, "rb") as fd:
+                cairosvg.svg2pdf(
+                    file_obj=fd, write_to=outfile_pdf,
+                )
 
             page += 1
 
@@ -259,7 +269,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output-dir",
         default=LabelGenerator.DEFAULT_OUTPUT_DIR,
-        help='Output labels to this directory',
+        help="Output labels to this directory",
     )
     parser.add_argument(
         "--paper-size",
