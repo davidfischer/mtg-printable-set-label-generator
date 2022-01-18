@@ -1,3 +1,4 @@
+import argparse
 import os
 import subprocess
 from datetime import datetime
@@ -44,6 +45,7 @@ MINIMUM_SET_SIZE = 50
 IGNORED_SETS = (
     "cmb1",  # Mystery Booster Playtest Cards
     "amh1",  # Modern Horizon Art Series
+    "cmb2",  # Mystery Booster Playtest Cards Part Deux
 )
 
 # Used to rename very long set names
@@ -84,146 +86,189 @@ RENAME_SETS = {
     "Premium Deck Series: Slivers": "Premium Deck Slivers",
     "Premium Deck Series: Graveborn": "Premium Deck Graveborn",
     "Premium Deck Series: Fire and Lightning": "Premium Deck Fire & Lightning",
+    "Mystery Booster Retail Edition Foils": "Mystery Booster Retail Foils",
+    "Adventures in the Forgotten Realms": "Forgotten Realms",
 }
 
-COLS = 4
-ROWS = 15
-WIDTH = 2790  # Width in 1/10 mm of US Letter paper
-HEIGHT = 2160
-MARGIN = 200
-START_X = MARGIN
-START_Y = MARGIN
-DELTA_X = (WIDTH - (2 * MARGIN)) / COLS
-DELTA_Y = (HEIGHT - (2 * MARGIN)) / ROWS
 
+class LabelGenerator:
 
-def get_set_data():
-    print("Getting set data and icons from Scryfall")
+    DEFAULT_OUTPUT_DIR = os.path.join(BASE_DIR, "output")
 
-    # https://scryfall.com/docs/api/sets
-    # https://scryfall.com/docs/api/sets/all
-    resp = requests.get("https://api.scryfall.com/sets")
-    resp.raise_for_status()
+    COLS = 4
+    ROWS = 15
+    MARGIN = 200  # in 1/10 mm
+    START_X = MARGIN
+    START_Y = MARGIN
 
-    data = resp.json()["data"]
-    data = [
-        exp
-        for exp in data
-        if exp["set_type"] in SET_TYPES
-        and not exp["digital"]
-        and exp["code"] not in IGNORED_SETS
-        and exp["card_count"] >= MINIMUM_SET_SIZE
-    ]
-    data.reverse()
+    PAPER_SIZES = {
+        "letter": {"width": 2790, "height": 2160,},  # in 1/10 mm
+        "a4": {"width": 2970, "height": 2100,},
+    }
+    DEFAULT_PAPER_SIZE = "letter"
 
-    return data
+    def __init__(self, paper_size=None, output_dir=None):
+        self.paper_size = paper_size or DEFAULT_PAPER_SIZE
+        paper = self.PAPER_SIZES[paper_size]
 
+        self.width = paper["width"]
+        self.height = paper["height"]
 
-def create_set_label_data():
-    """
-    Create the label data for the sets
+        # These are the deltas between rows and columns
+        self.delta_x = (self.width - (2 * self.MARGIN)) / self.COLS
+        self.delta_y = (self.height - (2 * self.MARGIN)) / self.ROWS
 
-    This handles positioning of the label's (x, y) coords
-    """
-    labels = []
-    x = START_X
-    y = START_Y
-    for exp in get_set_data():
-        name = RENAME_SETS.get(exp["name"], exp["name"])
-        labels.append(
-            {
-                "name": name,
-                "code": exp["code"],
-                "date": datetime.strptime(exp["released_at"], "%Y-%m-%d").date(),
-                "icon_url": exp["icon_svg_uri"],
-                "x": x,
-                "y": y,
-            }
-        )
+        self.output_dir = output_dir or DEFAULT_OUTPUT_DIR
 
-        y += DELTA_Y
+        # Set data from scryfall
+        self.set_data = self.get_set_data()
 
-        # Start a new column if needed
-        if len(labels) % ROWS == 0:
-            x += DELTA_X
-            y = START_Y
+    def generate_labels(self):
+        page = 1
+        labels = self.create_set_label_data()
+        while labels:
+            exps = []
+            while labels and len(exps) < (self.ROWS * self.COLS):
+                exps.append(labels.pop(0))
 
-        # Start a new page if needed
-        if len(labels) % (ROWS * COLS) == 0:
-            x = START_X
-            y = START_Y
+            # Render the label template
+            template = ENV.get_template("labels.svg")
+            output = template.render(
+                labels=exps,
+                horizontal_guides=self.create_horizontal_cutting_guides(),
+                vertical_guides=self.create_vertical_cutting_guides(),
+                WIDTH=self.width,
+                HEIGHT=self.height,
+            )
+            outfile = os.path.join(
+                self.output_dir, f"labels-{self.paper_size}-{page:02}.svg"
+            )
+            print(f"Writing {outfile}...")
+            with open(outfile, "w") as fd:
+                fd.write(output)
 
-    return labels
+            page += 1
 
+    def get_set_data(self):
+        print("Getting set data and icons from Scryfall")
 
-def create_horizontal_cutting_guides():
-    """Create horizontal cutting guides to help cut the labels out straight"""
-    horizontal_guides = []
-    for i in range(ROWS + 1):
-        horizontal_guides.append(
-            {
-                "x1": MARGIN / 2,
-                "x2": MARGIN * 0.8,
-                "y1": MARGIN + i * DELTA_Y,
-                "y2": MARGIN + i * DELTA_Y,
-            }
-        )
-        horizontal_guides.append(
-            {
-                "x1": WIDTH - MARGIN / 2,
-                "x2": WIDTH - MARGIN * 0.8,
-                "y1": MARGIN + i * DELTA_Y,
-                "y2": MARGIN + i * DELTA_Y,
-            }
-        )
+        # https://scryfall.com/docs/api/sets
+        # https://scryfall.com/docs/api/sets/all
+        resp = requests.get("https://api.scryfall.com/sets")
+        resp.raise_for_status()
 
-    return horizontal_guides
+        data = resp.json()["data"]
+        data = [
+            exp
+            for exp in data
+            if exp["set_type"] in SET_TYPES
+            and not exp["digital"]
+            and exp["code"] not in IGNORED_SETS
+            and exp["card_count"] >= MINIMUM_SET_SIZE
+        ]
+        data.reverse()
 
+        return data
 
-def create_vertical_cutting_guides():
-    """Create horizontal cutting guides to help cut the labels out straight"""
-    vertical_guides = []
-    for i in range(COLS + 1):
-        vertical_guides.append(
-            {
-                "x1": MARGIN + i * DELTA_X,
-                "x2": MARGIN + i * DELTA_X,
-                "y1": MARGIN / 2,
-                "y2": MARGIN * 0.8,
-            }
-        )
-        vertical_guides.append(
-            {
-                "x1": MARGIN + i * DELTA_X,
-                "x2": MARGIN + i * DELTA_X,
-                "y1": HEIGHT - MARGIN / 2,
-                "y2": HEIGHT - MARGIN * 0.8,
-            }
-        )
+    def create_set_label_data(self):
+        """
+        Create the label data for the sets
 
-    return vertical_guides
+        This handles positioning of the label's (x, y) coords
+        """
+        labels = []
+        x = self.START_X
+        y = self.START_Y
+        for exp in self.set_data:
+            name = RENAME_SETS.get(exp["name"], exp["name"])
+            labels.append(
+                {
+                    "name": name,
+                    "code": exp["code"],
+                    "date": datetime.strptime(exp["released_at"], "%Y-%m-%d").date(),
+                    "icon_url": exp["icon_svg_uri"],
+                    "x": x,
+                    "y": y,
+                }
+            )
+
+            y += self.delta_y
+
+            # Start a new column if needed
+            if len(labels) % self.ROWS == 0:
+                x += self.delta_x
+                y = self.START_Y
+
+            # Start a new page if needed
+            if len(labels) % (self.ROWS * self.COLS) == 0:
+                x = self.START_X
+                y = self.START_Y
+
+        return labels
+
+    def create_horizontal_cutting_guides(self):
+        """Create horizontal cutting guides to help cut the labels out straight"""
+        horizontal_guides = []
+        for i in range(self.ROWS + 1):
+            horizontal_guides.append(
+                {
+                    "x1": self.MARGIN / 2,
+                    "x2": self.MARGIN * 0.8,
+                    "y1": self.MARGIN + i * self.delta_y,
+                    "y2": self.MARGIN + i * self.delta_y,
+                }
+            )
+            horizontal_guides.append(
+                {
+                    "x1": self.width - self.MARGIN / 2,
+                    "x2": self.width - self.MARGIN * 0.8,
+                    "y1": self.MARGIN + i * self.delta_y,
+                    "y2": self.MARGIN + i * self.delta_y,
+                }
+            )
+
+        return horizontal_guides
+
+    def create_vertical_cutting_guides(self):
+        """Create horizontal cutting guides to help cut the labels out straight"""
+        vertical_guides = []
+        for i in range(self.COLS + 1):
+            vertical_guides.append(
+                {
+                    "x1": self.MARGIN + i * self.delta_x,
+                    "x2": self.MARGIN + i * self.delta_x,
+                    "y1": self.MARGIN / 2,
+                    "y2": self.MARGIN * 0.8,
+                }
+            )
+            vertical_guides.append(
+                {
+                    "x1": self.MARGIN + i * self.delta_x,
+                    "x2": self.MARGIN + i * self.delta_x,
+                    "y1": self.height - self.MARGIN / 2,
+                    "y2": self.height - self.MARGIN * 0.8,
+                }
+            )
+
+        return vertical_guides
 
 
 if __name__ == "__main__":
-    page = 1
-    labels = create_set_label_data()
-    while labels:
-        exps = []
-        while labels and len(exps) < (ROWS * COLS):
-            exps.append(labels.pop(0))
+    parser = argparse.ArgumentParser(description="Generate MTG labels")
 
-        # Render the label template
-        template = ENV.get_template("labels.svg")
-        output = template.render(
-            labels=exps,
-            horizontal_guides=create_horizontal_cutting_guides(),
-            vertical_guides=create_vertical_cutting_guides(),
-            WIDTH=WIDTH,
-            HEIGHT=HEIGHT,
-        )
-        outfile = os.path.join(BASE_DIR, "output", f"labels{page:02}.svg")
-        print(f"Writing {outfile}...")
-        with open(outfile, "w") as fd:
-            fd.write(output)
+    parser.add_argument(
+        "--output-dir",
+        default=LabelGenerator.DEFAULT_OUTPUT_DIR,
+        help='Output labels to this directory',
+    )
+    parser.add_argument(
+        "--paper-size",
+        default=LabelGenerator.DEFAULT_PAPER_SIZE,
+        choices=LabelGenerator.PAPER_SIZES.keys(),
+        help='Use this paper size (default: "letter")',
+    )
 
-        page += 1
+    args = parser.parse_args()
+
+    generator = LabelGenerator(args.paper_size, args.output_dir)
+    generator.generate_labels()
