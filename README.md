@@ -56,7 +56,11 @@ You can also "print" to a PDF.
 A lot of features can be customized by changing constants at the top of `label-generator.py`.
 For example, sets can be excluded one-by-one or in groups by type or sets can be renamed.
 
-The labels are designed for US Letter paper but this can be customized.
+The labels are designed for US Letter paper but this can be customized:
+
+    python label-generator.py --paper-size=a4   # Use A4 paper size
+    python label-generator.py --help   # Show all options
+
 
 You can change how the labels are actually displayed and rendered by customizing `templates/labels.svg`.
 If you change the fonts, you may also need to resize things to fit.
