@@ -28,27 +28,17 @@ It requires Python 3.6+ and has a few dependencies.
 
 
     pip install -r requirements.txt  # Install dependencies
-    python label-generator.py        # Creates files in output/
+    python label-generator.py        # Creates SVG & PDF files in output/
 
-By default, this will create one or more SVG files.
-These files are vector image files that can be customized further
-or printed using most modern browsers and many other tools.
+By default, this will create SVG & PDF files.
+The SVG files are vector image files that can be customized further.
+The PDF files are ready to print.
 
 The SVGs use the free fonts [EB Garamond][garamond] bold and [Source Sans Pro][source-sans] regular.
 
 [releases]: https://github.com/davidfischer/mtg-printable-set-label-generator/releases
 [garamond]: https://fonts.google.com/specimen/EB+Garamond
 [source-sans]: https://fonts.google.com/specimen/Source+Sans+Pro
-
-
-### Tips for printing
-
-The output SVGs are precisely sized for a sheet of paper (US Letter by default).
-Make sure while printing in your browser or otherwise to set the margins to None.
-
-<img src="readme-img/browser-printing.png">
-
-You can also "print" to a PDF.
 
 
 ### Customizing
@@ -64,6 +54,19 @@ The labels are designed for US Letter paper but this can be customized:
 
 You can change how the labels are actually displayed and rendered by customizing `templates/labels.svg`.
 If you change the fonts, you may also need to resize things to fit.
+
+
+### Tips for printing SVGs
+
+If you're just using the default PDFs, you probably won't need this.
+However, if you are customizing the SVGs and printing them, this section is for you.
+
+The output SVGs are precisely sized for a sheet of paper (US Letter by default).
+Make sure while printing in your browser or otherwise to set the margins to None.
+
+<img src="readme-img/browser-printing.png">
+
+You can also "print" to a PDF.
 
 
 ## License
