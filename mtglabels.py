@@ -291,7 +291,7 @@ class LabelGenerator:
         return vertical_guides
 
 
-if __name__ == "__main__":
+def main():
     log_format = '[%(levelname)s] %(message)s'
     logging.basicConfig(format=log_format, level=logging.INFO)
 
@@ -322,3 +322,7 @@ if __name__ == "__main__":
 
     generator = LabelGenerator(args.paper_size, args.output_dir)
     generator.generate_labels(args.sets)
+
+
+if __name__ == "__main__":
+    main()
