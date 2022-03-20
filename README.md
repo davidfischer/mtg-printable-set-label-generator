@@ -23,12 +23,12 @@ check out the [releases tab on GitHub][releases] to download and print the PDFs.
 
 If you want to create or customize your own labels, read on!
 
-The script `mtglabels.py` is a small Python script to generate the printable labels.
+The script `generator.py` is a small Python script to generate the printable labels.
 It requires Python 3.6+ and has a few dependencies.
 
 
     pip install -r requirements.txt  # Install dependencies
-    python mtglabels.py        # Creates SVG & PDF files in output/
+    python mtglabels/generator.py        # Creates SVG & PDF files in output/
 
 By default, this will create SVG & PDF files.
 The SVG files are vector image files that can be customized further.
@@ -43,13 +43,17 @@ The SVGs use the free fonts [EB Garamond][garamond] bold and [Source Sans Pro][s
 
 ### Customizing
 
-A lot of features can be customized by changing constants at the top of `mtglabels.py`.
+A lot of features can be customized by changing constants at the top of `generator.py`.
 For example, sets can be excluded one-by-one or in groups by type or sets can be renamed.
 
 The labels are designed for US Letter paper but this can be customized:
 
-    python mtglabels.py --paper-size=a4   # Use A4 paper size
-    python mtglabels.py --help   # Show all options
+    python mtglabels/generator.py --paper-size=a4   # Use A4 paper size
+    python mtglabels/generator.py --help   # Show all options
+
+You can generate labels for specific sets as well:
+
+    python mtglabels/generator.py lea mh1 mh2 neo
 
 
 You can change how the labels are actually displayed and rendered by customizing `templates/labels.svg`.
