@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 import subprocess
 from datetime import datetime
@@ -8,6 +9,8 @@ import cairosvg
 import jinja2
 import requests
 
+
+log = logging.getLogger(__name__)
 
 BASE_DIR = Path(os.path.abspath(os.path.dirname(__file__)))
 
@@ -113,6 +116,11 @@ class LabelGenerator:
         self.paper_size = paper_size or DEFAULT_PAPER_SIZE
         paper = self.PAPER_SIZES[paper_size]
 
+        self.set_codes = []
+        self.ignored_sets = IGNORED_SETS
+        self.set_types = SET_TYPES
+        self.minimum_set_size = MINIMUM_SET_SIZE
+
         self.width = paper["width"]
         self.height = paper["height"]
 
@@ -122,10 +130,13 @@ class LabelGenerator:
 
         self.output_dir = Path(output_dir or DEFAULT_OUTPUT_DIR)
 
-        # Set data from scryfall
-        self.set_data = self.get_set_data()
+    def generate_labels(self, sets=None):
+        if sets:
+            self.ignored_sets = ()
+            self.minimum_set_size = 0
+            self.set_types = ()
+            self.set_codes = [exp.lower() for exp in sets]
 
-    def generate_labels(self):
         page = 1
         labels = self.create_set_label_data()
         while labels:
@@ -147,11 +158,11 @@ class LabelGenerator:
                 self.output_dir / f"labels-{self.paper_size}-{page:02}.pdf"
             )
 
-            print(f"Writing {outfile_svg}...")
+            log.info(f"Writing {outfile_svg}...")
             with open(outfile_svg, "w") as fd:
                 fd.write(output)
 
-            print(f"Writing {outfile_pdf}...")
+            log.info(f"Writing {outfile_pdf}...")
             with open(outfile_svg, "rb") as fd:
                 cairosvg.svg2pdf(
                     file_obj=fd, write_to=outfile_pdf,
@@ -160,7 +171,7 @@ class LabelGenerator:
             page += 1
 
     def get_set_data(self):
-        print("Getting set data and icons from Scryfall")
+        log.info("Getting set data and icons from Scryfall")
 
         # https://scryfall.com/docs/api/sets
         # https://scryfall.com/docs/api/sets/all
@@ -168,17 +179,30 @@ class LabelGenerator:
         resp.raise_for_status()
 
         data = resp.json()["data"]
-        data = [
-            exp
-            for exp in data
-            if exp["set_type"] in SET_TYPES
-            and not exp["digital"]
-            and exp["code"] not in IGNORED_SETS
-            and exp["card_count"] >= MINIMUM_SET_SIZE
-        ]
-        data.reverse()
+        set_data = []
+        for exp in data:
+            if exp["code"] in self.ignored_sets:
+                continue
+            elif exp["card_count"] < self.minimum_set_size:
+                continue
+            elif self.set_types and exp["set_type"] not in self.set_types:
+                continue
+            elif self.set_codes and exp["code"].lower() not in self.set_codes:
+                # Scryfall set codes are always lowercase
+                continue
+            else:
+                set_data.append(exp)
 
-        return data
+        # Warn on any unknown set codes
+        if self.set_codes:
+            known_sets = set([exp["code"] for exp in data])
+            specified_sets = set([code.lower() for code in self.set_codes])
+            unknown_sets = specified_sets.difference(known_sets)
+            for set_code in unknown_sets:
+                log.warning("Unknown set '%s'", set_code)
+
+        set_data.reverse()
+        return set_data
 
     def create_set_label_data(self):
         """
@@ -189,7 +213,11 @@ class LabelGenerator:
         labels = []
         x = self.START_X
         y = self.START_Y
-        for exp in self.set_data:
+
+        # Get set data from scryfall
+        set_data = self.get_set_data()
+
+        for exp in set_data:
             name = RENAME_SETS.get(exp["name"], exp["name"])
             labels.append(
                 {
@@ -264,6 +292,9 @@ class LabelGenerator:
 
 
 if __name__ == "__main__":
+    log_format = '[%(levelname)s] %(message)s'
+    logging.basicConfig(format=log_format, level=logging.INFO)
+
     parser = argparse.ArgumentParser(description="Generate MTG labels")
 
     parser.add_argument(
@@ -277,8 +308,17 @@ if __name__ == "__main__":
         choices=LabelGenerator.PAPER_SIZES.keys(),
         help='Use this paper size (default: "letter")',
     )
+    parser.add_argument(
+        "sets",
+        nargs="*",
+        help=(
+            "Only output sets with the specified set code (eg. MH1, NEO). "
+            "This can be used multiple times."
+        ),
+        metavar="SET",
+    )
 
     args = parser.parse_args()
 
     generator = LabelGenerator(args.paper_size, args.output_dir)
-    generator.generate_labels()
+    generator.generate_labels(args.sets)
