@@ -98,7 +98,7 @@ RENAME_SETS = {
 
 class LabelGenerator:
 
-    DEFAULT_OUTPUT_DIR = BASE_DIR / "output"
+    DEFAULT_OUTPUT_DIR = Path(os.getcwd()) / "output"
 
     COLS = 4
     ROWS = 15
