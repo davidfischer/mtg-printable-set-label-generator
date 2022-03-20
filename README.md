@@ -19,9 +19,14 @@ the label for that set can be generated and printed.
 ## Usage
 
 If you're just interested in downloading and printing these set labels,
-check out the [releases tab on GitHub][releases] to download and print the PDFs.
+check out the [web frontend](https://mtg-label-generator.herokuapp.com/)
+([code](https://github.com/davidfischer/mtg-printable-set-label-frontend))
+and generate your own labels.
 
-If you want to create or customize your own labels, read on!
+
+### Advanced
+
+If you want to further customize things, read on!
 
 The script `generator.py` is a small Python script to generate the printable labels.
 It requires Python 3.6+ and has a few dependencies.
@@ -36,7 +41,6 @@ The PDF files are ready to print.
 
 The SVGs use the free fonts [EB Garamond][garamond] bold and [Source Sans Pro][source-sans] regular.
 
-[releases]: https://github.com/davidfischer/mtg-printable-set-label-generator/releases
 [garamond]: https://fonts.google.com/specimen/EB+Garamond
 [source-sans]: https://fonts.google.com/specimen/Source+Sans+Pro
 
