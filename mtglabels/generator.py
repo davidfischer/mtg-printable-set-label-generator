@@ -90,9 +90,16 @@ RENAME_SETS = {
     "Duel Decks: Elves vs. Inventors": "DD: Elves vs. Inventors",
     "Premium Deck Series: Slivers": "Premium Deck Slivers",
     "Premium Deck Series: Graveborn": "Premium Deck Graveborn",
-    "Premium Deck Series: Fire and Lightning": "Premium Deck Fire & Lightning",
+    "Premium Deck Series: Fire and Lightning": "PD: Fire & Lightning",
     "Mystery Booster Retail Edition Foils": "Mystery Booster Retail Foils",
     "Adventures in the Forgotten Realms": "Forgotten Realms",
+    "Archenemy: Nicol Bolas Schemes": "Archenemy: Bolas Schemes",
+    "Global Series Jiang Yanggu & Mu Yanling": "Jiang Yanggu & Mu Yanling",
+    "Mystery Booster Playtest Cards 2019": "MB Playtest Cards 2019",
+    "Mystery Booster Playtest Cards 2021": "MB Playtest Cards 2021",
+    "Strixhaven: School of Mages Minigames": "Strixhaven Minigames",
+    "Adventures in the Forgotten Realms Minigames": "Forgotten Realms Minigames",
+    "Innistrad: Crimson Vow Minigames": "Crimson Vow Minigames",
 }
 
 
