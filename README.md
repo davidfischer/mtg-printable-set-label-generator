@@ -19,7 +19,7 @@ the label for that set can be generated and printed.
 ## Usage
 
 If you're just interested in downloading and printing these set labels,
-check out the [web frontend](https://mtg-label-generator.herokuapp.com/)
+check out the [web frontend](https://mtg-label-generator.fly.dev/)
 ([code](https://github.com/davidfischer/mtg-printable-set-label-frontend))
 and generate your own labels.
 
