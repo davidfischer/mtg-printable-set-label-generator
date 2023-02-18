@@ -100,6 +100,11 @@ RENAME_SETS = {
     "Strixhaven: School of Mages Minigames": "Strixhaven Minigames",
     "Adventures in the Forgotten Realms Minigames": "Forgotten Realms Minigames",
     "Innistrad: Crimson Vow Minigames": "Crimson Vow Minigames",
+    "Commander Legends: Battle for Baldur's Gate": "CMDR Legends: Baldur's Gate",
+    "Warhammer 40,000 Commander": "Warhammer 40K",
+    "The Brothers' War Retro Artifacts": "Brothers' War Retro",
+    "The Brothers' War Commander": "Brothers' War Commander",
+    "Phyrexia: All Will Be One Commander": "Phyrexia: One CMDR",
 }
 
 
