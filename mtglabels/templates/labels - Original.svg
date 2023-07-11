@@ -8,9 +8,9 @@
     {% for label in labels %}
         <g>
             <!-- {{ label.name }} -->
-            <text x="{{ label.x + 30 }}" y="{{ label.y + 30 }}" font-size="26.25" dominant-baseline="hanging" style="font-weight: bold; font-family: 'EB Garamond', 'Times New Roman', serif">{{ label.name | escape }}</text>
+            <text x="{{ label.x + 30 }}" y="{{ label.y + 30 }}" font-size="35" dominant-baseline="hanging" style="font-weight: bold; font-family: 'EB Garamond', 'Times New Roman', serif">{{ label.name | escape }}</text>
             <text x="{{ label.x + 30 }}" y="{{ label.y + 70 }}" font-size="25" dominant-baseline="hanging" style="font-family: 'Source Sans Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif">{{ label.code | upper | escape }} - {{ label.date.strftime('%B %Y') }}</text>
-            <image x="{{ label.x + 390 }}" y="{{ label.y + 23 }}" width="70" height="70" href="{{ label.icon_url }}" />
+            <image x="{{ label.x + 490 }}" y="{{ label.y + 20 }}" width="70" height="70" href="{{ label.icon_url }}" />
         </g>
     {% endfor %}
 
