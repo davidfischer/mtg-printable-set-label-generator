@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+os.environ['path'] += r';C:\Program Files\GIMP 2\bin'
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -88,6 +89,7 @@ RENAME_SETS = {
     "Duel Decks: Nissa vs. Ob Nixilis": "DD: Nissa vs. Ob Nixilis",
     "Duel Decks: Merfolk vs. Goblins": "DD: Merfolk vs. Goblins",
     "Duel Decks: Elves vs. Inventors": "DD: Elves vs. Inventors",
+    "Duel Decks: Mirrodin Pure vs. New Phyrexia": "DD: Mirrodin vs. Phyrexia",
     "Premium Deck Series: Slivers": "Premium Deck Slivers",
     "Premium Deck Series: Graveborn": "Premium Deck Graveborn",
     "Premium Deck Series: Fire and Lightning": "PD: Fire & Lightning",
@@ -100,26 +102,37 @@ RENAME_SETS = {
     "Strixhaven: School of Mages Minigames": "Strixhaven Minigames",
     "Adventures in the Forgotten Realms Minigames": "Forgotten Realms Minigames",
     "Innistrad: Crimson Vow Minigames": "Crimson Vow Minigames",
-    "Commander Legends: Battle for Baldur's Gate": "CMDR Legends: Baldur's Gate",
-    "Warhammer 40,000 Commander": "Warhammer 40K",
-    "The Brothers' War Retro Artifacts": "Brothers' War Retro",
-    "The Brothers' War Commander": "Brothers' War Commander",
-    "Phyrexia: All Will Be One Commander": "Phyrexia: One CMDR",
+    "Commander Legends: Battle for Baldur's Gate": "CL: Battle for Baldur's Gate",
+    "Warhammer 40,000 Commander": "Warhammer 40k Cmdr",
+    "The Brothers' War Commander": "The Brothers' War Cmdr",
+    "Forgotten Realms Commander": "Forgotten Realms Cmdr",
+    "Dominaria United Commander": "Dominaria United Cmdr",
+    "The List (Unfinity Foil Edition)": "The List (Unfinity Edition)",
+    "Zendikar Rising Commander": "Zendikar Rising Cmdr",
+    "Phyrexia: All Will Be One Commander": "Phyrexia: AWBO Cmdr",
+    "Shadows over Innistrad Remastered": "Shadows over Innistrad Rmst",
+    "March of the Machine Commander": "March of the Machine Cmdr",
+    "March of the Machine: The Aftermath": "March of the Machine Aftrmth",
+    "The Lord of the Rings: Tales of Middle-earth": "The Lord of the Rings",
+    "Tales of Middle-earth Commander": "The Lord of the Rings Cmdr",
 }
-
 
 class LabelGenerator:
 
     DEFAULT_OUTPUT_DIR = Path(os.getcwd()) / "output"
 
     COLS = 4
-    ROWS = 15
-    MARGIN = 200  # in 1/10 mm
-    START_X = MARGIN
-    START_Y = MARGIN
+    ROWS = 20
+    MARGIN = 0  # in 1/10 mm
+    # More is closer
+    DELTA_X = 50
+    DELTA_Y = 36
+    START_X = MARGIN + 55
+    START_Y = MARGIN + 115
 
     PAPER_SIZES = {
-        "letter": {"width": 2790, "height": 2160,},  # in 1/10 mm
+        # "letter": {"width": 2790, "height": 2160,},  # in 1/10 mm
+        "letter": {"width": 2160, "height": 2790,},  # in 1/10 mm
         "a4": {"width": 2970, "height": 2100,},
     }
     DEFAULT_PAPER_SIZE = "letter"
@@ -137,9 +150,9 @@ class LabelGenerator:
         self.height = paper["height"]
 
         # These are the deltas between rows and columns
-        self.delta_x = (self.width - (2 * self.MARGIN)) / self.COLS
-        self.delta_y = (self.height - (2 * self.MARGIN)) / self.ROWS
-
+        self.delta_x = (self.width - (1.5 * self.DELTA_X)) / self.COLS
+        self.delta_y = (self.height - (7 * self.DELTA_Y)) / self.ROWS
+        
         self.output_dir = Path(output_dir or DEFAULT_OUTPUT_DIR)
 
     def generate_labels(self, sets=None):
