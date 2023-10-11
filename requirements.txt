@@ -1,6 +1,6 @@
 Jinja2==3.1.2
 requests==2.22.0
-CairoSVG==2.5.2
+CairoSVG==2.7.1
 
 # For development only
 black==19.10b0

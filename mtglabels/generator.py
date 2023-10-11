@@ -1,4 +1,5 @@
 import argparse
+import base64
 import logging
 import os
 import subprocess
@@ -242,12 +243,18 @@ class LabelGenerator:
 
         for exp in set_data:
             name = RENAME_SETS.get(exp["name"], exp["name"])
+            icon_resp = requests.get(exp["icon_svg_uri"])
+            icon_b64 = None
+            if icon_resp.ok:
+                icon_b64 = base64.b64encode(icon_resp.content).decode('utf-8')
+
             labels.append(
                 {
                     "name": name,
                     "code": exp["code"],
                     "date": datetime.strptime(exp["released_at"], "%Y-%m-%d").date(),
                     "icon_url": exp["icon_svg_uri"],
+                    "icon_b64": icon_b64,
                     "x": x,
                     "y": y,
                 }

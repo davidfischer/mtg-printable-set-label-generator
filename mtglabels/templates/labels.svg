@@ -10,7 +10,9 @@
             <!-- {{ label.name }} -->
             <text x="{{ label.x + 30 }}" y="{{ label.y + 30 }}" font-size="32" dominant-baseline="hanging" style="font-weight: bold; font-family: 'EB Garamond', 'Times New Roman', serif">{{ label.name | escape }}</text>
             <text x="{{ label.x + 30 }}" y="{{ label.y + 70 }}" font-size="25" dominant-baseline="hanging" style="font-family: 'Source Sans Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif">{{ label.code | upper | escape }} - {{ label.date.strftime('%B %Y') }}</text>
-            <image x="{{ label.x + 490 }}" y="{{ label.y + 20 }}" width="70" height="70" href="{{ label.icon_url }}" />
+            {% if label.icon_b64 %}
+                <image x="{{ label.x + 490 }}" y="{{ label.y + 20 }}" width="70" height="70" xlink:href="data:image/svg+xml;base64,{{ label.icon_b64 }}" />
+            {% endif %}
         </g>
     {% endfor %}
 
