@@ -70,7 +70,7 @@
      inkscape:window-width="1936"
      inkscape:window-height="1212"
      inkscape:window-x="191"
-     inkscape:window-y="87"
+     inkscape:window-y="59"
      inkscape:window-maximized="0"
      units="px"
      fit-margin-top="0"
@@ -127,7 +127,7 @@
      id="layer1"
      transform="translate(-671.66181,-519.84953)">
     <circle
-       style="fill:#eea489;fill-opacity:1;fill-rule:nonzero;stroke-width:0.928172"
+       style="fill:#eea489;fill-opacity:1;fill-rule:nonzero;stroke-width:0.928172;stroke:none"
        id="path1"
        cx="788.8493"
        cy="637.03705"

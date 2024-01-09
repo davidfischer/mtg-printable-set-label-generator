@@ -55,7 +55,7 @@
      showgrid="false"
      inkscape:window-width="2576"
      inkscape:window-height="1212"
-     inkscape:window-x="1067"
+     inkscape:window-x="864"
      inkscape:window-y="25"
      inkscape:window-maximized="0"
      units="px"
@@ -133,7 +133,7 @@
      id="layer1"
      transform="translate(-657.72803,-418.59079)">
     <circle
-       style="fill:#c5beb8;stroke-width:0.99005;fill-opacity:1;fill-rule:nonzero"
+       style="fill:#c5beb8;stroke-width:0.99005;fill-opacity:1;fill-rule:nonzero;stroke:none"
        id="path1"
        cx="782.72803"
        cy="543.59082"

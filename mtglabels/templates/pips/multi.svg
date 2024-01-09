@@ -127,23 +127,23 @@
      id="layer1"
      transform="translate(-671.66181,-519.84953)">
     <circle
-       style="fill:#ffd42a;fill-opacity:1;fill-rule:nonzero;stroke-width:0.928172"
+       style="fill:#ffd42a;fill-opacity:1;fill-rule:nonzero;stroke-width:0.928172;stroke:none;stroke-opacity:1"
        id="path1"
        cx="788.8493"
        cy="637.03705"
        r="117.1875"
        transform="translate(3.7500002e-6)" />
     <circle
-       style="fill:#f9f9f9;fill-opacity:1;fill-rule:nonzero;stroke-width:0.782316"
+       style="fill:#f9f9f9;fill-opacity:1;fill-rule:nonzero;stroke-width:0.655024;stroke:none"
        id="circle1"
        cx="788.8493"
        cy="637.03705"
-       r="98.772324" />
+       r="82.700897" />
     <circle
-       style="fill:#ffcc00;fill-opacity:1;fill-rule:nonzero;stroke-width:0.686847"
+       style="fill:#ffcc00;fill-opacity:1;fill-rule:nonzero;stroke-width:0.556903;stroke:none"
        id="circle2"
        cx="788.8493"
        cy="637.03705"
-       r="86.71875" />
+       r="70.3125" />
   </g>
 </svg>
