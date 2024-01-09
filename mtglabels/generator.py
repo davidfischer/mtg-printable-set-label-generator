@@ -56,7 +56,7 @@ class LabelGenerator:
             exps = []
             while labels and len(exps) < (self.ROWS * self.COLS):
                 exps.append(labels.pop(0))
-
+            logging.info(len(exps))
             # Render the label template
             template = ENV.get_template("labels.svg")
             output = template.render(
@@ -83,6 +83,15 @@ class LabelGenerator:
                 )
 
             page += 1
+
+    def get_pips(self):
+        # return an dict of pips and their base64 encoded svg from the templates/pips directory
+        pips = {}
+        for pip in Path(BASE_DIR / "templates" / "pips").glob("*.svg"):
+            pips[pip.stem] = base64.b64encode(pip.read_bytes()).decode("utf-8")
+
+        # print(pips)
+        return pips
 
     def get_set_data(self):
         logging.info("Getting set data and icons from Scryfall")
@@ -137,11 +146,48 @@ class LabelGenerator:
             icon_b64 = None
             colour_indicator = None
 
+            if icon_resp.ok:
+                icon_b64 = base64.b64encode(icon_resp.content).decode("utf-8")
+
             colour_indicator_path = Path(BASE_DIR / "templates" / "r.svg")
-            logging.info(
+            logging.debug(
                 f"Checking for colour indicator file at: {colour_indicator_path}"
             )
 
+            if args.pips:
+                for pip in self.get_pips().values():
+                    colour_indicator = pip
+                    labels.append(
+                        {
+                            "name": name,
+                            "code": exp["code"],
+                            "date": datetime.strptime(
+                                exp["released_at"], "%Y-%m-%d"
+                            ).date(),
+                            "icon_url": exp["icon_svg_uri"],
+                            "icon_b64": icon_b64,
+                            "colour_indicator": colour_indicator,
+                            "x": x,
+                            "y": y,
+                        }
+                    )
+            else:
+                labels.append(
+                    {
+                        "name": name,
+                        "code": exp["code"],
+                        "date": datetime.strptime(
+                            exp["released_at"], "%Y-%m-%d"
+                        ).date(),
+                        "icon_url": exp["icon_svg_uri"],
+                        "icon_b64": icon_b64,
+                        "colour_indicator": colour_indicator,
+                        "x": x,
+                        "y": y,
+                    }
+                )
+
+            logging.info(len(labels))
             # if colour_indicator_path.exists():
             #     logging.info(
             #         f"Colour indicator file exists: {colour_indicator_path.exists()}"
@@ -150,21 +196,6 @@ class LabelGenerator:
             #     colour_indicator = base64.b64encode(
             #         colour_indicator_path.read_bytes()
             #     ).decode("utf-8")
-            if icon_resp.ok:
-                icon_b64 = base64.b64encode(icon_resp.content).decode("utf-8")
-
-            labels.append(
-                {
-                    "name": name,
-                    "code": exp["code"],
-                    "date": datetime.strptime(exp["released_at"], "%Y-%m-%d").date(),
-                    "icon_url": exp["icon_svg_uri"],
-                    "icon_b64": icon_b64,
-                    "colour_indicator": colour_indicator,
-                    "x": x,
-                    "y": y,
-                }
-            )
 
             y += self.delta_y
 

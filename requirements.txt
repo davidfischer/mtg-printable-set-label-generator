@@ -3,3 +3,4 @@ requests==2.31.0
 CairoSVG==2.7.1
 black==23.12.1
 urllib3==2.1.0
+fpdf2==2.7.7
