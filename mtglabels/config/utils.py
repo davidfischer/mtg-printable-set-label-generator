@@ -20,7 +20,8 @@ def setup_args():
         "--paper-size",
         default=defaults.DEFAULT_PAPER_SIZE,
         choices=defaults.PAPER_SIZES.keys(),
-        help='Use this paper size (default: "letter")',
+        help='Use this paper size (default: "A4")',
+        type=str.lower,
     )
     parser.add_argument(
         "--sets",

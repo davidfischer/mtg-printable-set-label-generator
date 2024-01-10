@@ -4,6 +4,18 @@ from pathlib import Path
 API_ENDPOINT = "https://api.scryfall.com/sets"
 DEFAULT_OUTPUT_DIR = Path(os.getcwd()) / "output"
 
+# MTG Card Size: 63mm x 88mm
+# Label Size: 65mm x 95mm
+DIVIDER_WIDTH = 65
+DIVIDER_HEIGHT = 95
+
+# Page Layout Settings
+PAGE_OFFSET = 5
+LABELS_PER_ROW = 4
+LABELS_PER_COLUMN = 2
+LABELS_PER_PAGE = LABELS_PER_ROW * LABELS_PER_COLUMN
+
+DEFAULT_PAPER_SIZE = "A4"
 PAPER_SIZES = {
     "letter": {
         "width": 2790,
@@ -14,9 +26,6 @@ PAPER_SIZES = {
         "height": 2100,
     },
 }
-
-DEFAULT_PAPER_SIZE = "letter"
-
 
 # Only include sets at least this size
 # For reference, the smallest proper expansion is Arabian Nights with 78 cards

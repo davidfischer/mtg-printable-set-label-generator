@@ -1,97 +1,117 @@
-import base64
+import io
 import logging
 import os
 from datetime import datetime
+from itertools import cycle
 from pathlib import Path
 
-import cairosvg
-import jinja2
 import requests
-from config import defaults
+from cairosvg import svg2png
+from config import defaults, pdf_templates
 from config.utils import setup_args, setup_logger
+from fpdf import FPDF, FlexTemplate
+from PIL import Image, ImageOps
 
 BASE_DIR = Path(os.path.abspath(os.path.dirname(__file__)))
 
-ENV = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(BASE_DIR / "templates"),
-    autoescape=jinja2.select_autoescape(["html", "xml"]),
-)
 
-
-class LabelGenerator:
-    COLS = 4
-    ROWS = 15
-    MARGIN = 200  # in 1/10 mm
-    START_X = MARGIN
-    START_Y = MARGIN
-
+class SetDividers:
     def __init__(self, paper_size, output_dir):
         self.paper_size = paper_size
-        paper = defaults.PAPER_SIZES[paper_size]
 
         self.set_codes = []
         self.ignored_sets = defaults.IGNORED_SETS
         self.set_types = defaults.SET_TYPES
         self.minimum_set_size = defaults.MINIMUM_SET_SIZE
 
-        self.width = paper["width"]
-        self.height = paper["height"]
-
-        # These are the deltas between rows and columns
-        self.delta_x = (self.width - (2 * self.MARGIN)) / self.COLS
-        self.delta_y = (self.height - (2 * self.MARGIN)) / self.ROWS
-
         self.output_dir = Path(output_dir)
+        self.output_name = datetime.now().strftime("%Y-%M-%d") + "-set_dividers.pdf"
 
-    def generate_labels(self, sets=None):
+    def new_page_check(self, pdf, label_count):
+        if label_count > 0 and label_count % defaults.LABELS_PER_PAGE == 0:
+            logging.debug("Adding new page")
+            pdf.add_page()
+
+        label_count += 1
+        return label_count
+
+
+    def process_svg(self, svg_icon, set_icon_filename, target_size):
+        logging.debug(f"svg_icon Type: {type(svg_icon)}")
+        logging.debug(f"set_icon_filename Type: {type(set_icon_filename)}")
+
+        if isinstance(svg_icon, Path):
+            logging.debug("Transforming svg from disk")
+            png_bytes = svg2png(url=svg_icon.as_posix())
+        elif isinstance(svg_icon, bytes):
+            logging.debug("Transforming svg from bytestream")
+            png_bytes = svg2png(bytestring=svg_icon)
+
+        logging.debug(f"png_bytes Type: {type(png_bytes)}")
+
+        image = Image.open(io.BytesIO(png_bytes))
+
+        ImageOps.pad(image, target_size).save(set_icon_filename.as_posix())
+
+        return set_icon_filename
+
+    def generate_dividers(self, sets=None):
         if sets:
             self.ignored_sets = ()
             self.minimum_set_size = 0
             self.set_types = ()
             self.set_codes = [exp.lower() for exp in sets]
 
-        page = 1
-        labels = self.create_set_label_data()
-        while labels:
-            exps = []
-            while labels and len(exps) < (self.ROWS * self.COLS):
-                exps.append(labels.pop(0))
-            logging.info(len(exps))
-            # Render the label template
-            template = ENV.get_template("labels.svg")
-            output = template.render(
-                labels=exps,
-                horizontal_guides=self.create_horizontal_cutting_guides(),
-                vertical_guides=self.create_vertical_cutting_guides(),
-                WIDTH=self.width,
-                HEIGHT=self.height,
-            )
-            outfile_svg = self.output_dir / f"labels-{self.paper_size}-{page:02}.svg"
-            outfile_pdf = str(
-                self.output_dir / f"labels-{self.paper_size}-{page:02}.pdf"
-            )
+        pdf = FPDF(orientation="landscape", format=self.paper_size)
+        logging.debug("Creating initial page")
+        pdf.add_page()
 
-            logging.info(f"Writing {outfile_svg}...")
-            with open(outfile_svg, "w") as fd:
-                fd.write(output)
+        if args.pips:
+            template = FlexTemplate(pdf, pdf_templates.label_elements)
+        else:
+            template = FlexTemplate(pdf, pdf_templates.label_elements_no_pips)
 
-            logging.info(f"Writing {outfile_pdf}...")
-            with open(outfile_svg, "rb") as fd:
-                cairosvg.svg2pdf(
-                    file_obj=fd,
-                    write_to=outfile_pdf,
-                )
+        set_data = self.format_set_data()
 
-            page += 1
+        label_count = 0
+
+        for mtg_set in set_data:
+            logging.debug(f"Writing Label {label_count}")
+            label_count = self.new_page_check(pdf, label_count)
+
+            template["text_line_1"] = mtg_set["set_name"]
+            template["text_line_2"] = f"{mtg_set["set_code"]} - {mtg_set["set_date"]}"
+            template["set_icon"] = mtg_set["set_icon"]
+            if args.pips:
+                template["pip_icon"] = mtg_set["pip_icon"]
+
+            template.render(offsetx=mtg_set["x_offset"], offsety=mtg_set["y_offset"])
+
+        pdf.output(self.output_dir / self.output_name)
+
 
     def get_pips(self):
-        # return an dict of pips and their base64 encoded svg from the templates/pips directory
-        pips = {}
-        for pip in Path(BASE_DIR / "templates" / "pips").glob("*.svg"):
-            pips[pip.stem] = base64.b64encode(pip.read_bytes()).decode("utf-8")
+        """return an dict of pips and their base64 encoded svg from the resources/pips directory"""
 
-        # print(pips)
+        pips = list(Path(BASE_DIR / "resources" / "pips").glob("*.svg"))
+
+        logging.debug(f"Colour pips found: {pips}")
+
         return pips
+
+    def calculate_template_offsets(self):
+        template_offsets = [
+            {
+                "x_offset": col * defaults.DIVIDER_WIDTH + defaults.PAGE_OFFSET,
+                "y_offset": row * defaults.DIVIDER_HEIGHT + defaults.PAGE_OFFSET,
+            }
+            for row in range(defaults.LABELS_PER_COLUMN)
+            for col in range(defaults.LABELS_PER_ROW)
+        ]
+
+        logging.debug(f"Template offset values: {template_offsets}")
+
+        return template_offsets
 
     def get_set_data(self):
         logging.info("Getting set data and icons from Scryfall")
@@ -101,166 +121,122 @@ class LabelGenerator:
         resp = requests.get("https://api.scryfall.com/sets")
         resp.raise_for_status()
 
-        data = resp.json()["data"]
-        set_data = []
-        for exp in data:
-            if exp["code"] in self.ignored_sets:
+        scryfall_response = resp.json()["data"]
+        scryfall_set_data = []
+        for mtg_set in scryfall_response:
+            if mtg_set["code"] in self.ignored_sets:
                 continue
-            elif exp["card_count"] < self.minimum_set_size:
+            elif mtg_set["card_count"] < self.minimum_set_size:
                 continue
-            elif self.set_types and exp["set_type"] not in self.set_types:
+            elif self.set_types and mtg_set["set_type"] not in self.set_types:
                 continue
-            elif self.set_codes and exp["code"].lower() not in self.set_codes:
+            elif self.set_codes and mtg_set["code"].lower() not in self.set_codes:
                 # Scryfall set codes are always lowercase
                 continue
             else:
-                set_data.append(exp)
+                scryfall_set_data.append(mtg_set)
 
         # Warn on any unknown set codes
         if self.set_codes:
-            known_sets = set([exp["code"] for exp in data])
+            known_sets = set([mtg_set["code"] for mtg_set in scryfall_response])
             specified_sets = set([code.lower() for code in self.set_codes])
             unknown_sets = specified_sets.difference(known_sets)
             for set_code in unknown_sets:
-                logging.warning("Unknown set '%s'", set_code)
+                logging.warning(f"Unknown MTG set: {set_code}")
 
-        set_data.reverse()
-        return set_data
+        scryfall_set_data.reverse()
+        logging.debug(f"Set data: {scryfall_set_data}")
+        return scryfall_set_data
 
-    def create_set_label_data(self):
+    def get_set_icon(self, scryfall_id, scryfall_icon_svg_uri):
+        """
+        Returns the path to the set icon, downloading it if necessary
+        """
+
+        set_icons_path = Path(
+            BASE_DIR / "resources" / "set_icons"
+        )
+        set_icon_filename = set_icons_path / f"{scryfall_id}.png"
+
+        # Check if the icon already exists
+        if set_icon_filename.is_file():
+            logging.debug(f"Set icon found: {set_icon_filename}")
+            return set_icon_filename
+        else:
+            logging.debug(f"Downloading set icon: {scryfall_icon_svg_uri}")
+            resp = requests.get(scryfall_icon_svg_uri)
+            resp.raise_for_status()
+
+            set_icon_svg = resp.content
+
+            processed_icon = self.process_svg(
+                set_icon_svg,
+                set_icon_filename,
+                target_size=(256, 256),
+            )
+
+            if processed_icon.is_file():
+                logging.debug(f"Set icon downloaded: {set_icon_filename}")
+                return processed_icon
+
+    def format_set_data(self):
         """
         Create the label data for the sets
-
-        This handles positioning of the label's (x, y) coords
         """
-        labels = []
-        x = self.START_X
-        y = self.START_Y
 
         # Get set data from scryfall
         set_data = self.get_set_data()
+        template_offsets_cycle = cycle(self.calculate_template_offsets())
 
-        for exp in set_data:
-            name = defaults.RENAME_SETS.get(exp["name"], exp["name"])
-            icon_resp = requests.get(exp["icon_svg_uri"])
-            icon_b64 = None
-            colour_indicator = None
+        if args.pips:
+            logging.debug("Generating set data with colour pips")
+            colour_pips = self.get_pips()
 
-            if icon_resp.ok:
-                icon_b64 = base64.b64encode(icon_resp.content).decode("utf-8")
-
-            colour_indicator_path = Path(BASE_DIR / "templates" / "r.svg")
-            logging.debug(
-                f"Checking for colour indicator file at: {colour_indicator_path}"
-            )
-
-            if args.pips:
-                for pip in self.get_pips().values():
-                    colour_indicator = pip
-                    labels.append(
-                        {
-                            "name": name,
-                            "code": exp["code"],
-                            "date": datetime.strptime(
-                                exp["released_at"], "%Y-%m-%d"
-                            ).date(),
-                            "icon_url": exp["icon_svg_uri"],
-                            "icon_b64": icon_b64,
-                            "colour_indicator": colour_indicator,
-                            "x": x,
-                            "y": y,
-                        }
-                    )
-            else:
-                labels.append(
-                    {
-                        "name": name,
-                        "code": exp["code"],
-                        "date": datetime.strptime(
-                            exp["released_at"], "%Y-%m-%d"
-                        ).date(),
-                        "icon_url": exp["icon_svg_uri"],
-                        "icon_b64": icon_b64,
-                        "colour_indicator": colour_indicator,
-                        "x": x,
-                        "y": y,
-                    }
-                )
-
-            logging.info(len(labels))
-            # if colour_indicator_path.exists():
-            #     logging.info(
-            #         f"Colour indicator file exists: {colour_indicator_path.exists()}"
-            #     )
-            #     # colour_indicator =  colour_indicator_path.name
-            #     colour_indicator = base64.b64encode(
-            #         colour_indicator_path.read_bytes()
-            #     ).decode("utf-8")
-
-            y += self.delta_y
-
-            # Start a new column if needed
-            if len(labels) % self.ROWS == 0:
-                x += self.delta_x
-                y = self.START_Y
-
-            # Start a new page if needed
-            if len(labels) % (self.ROWS * self.COLS) == 0:
-                x = self.START_X
-                y = self.START_Y
-
-        return labels
-
-    def create_horizontal_cutting_guides(self):
-        """Create horizontal cutting guides to help cut the labels out straight"""
-        horizontal_guides = []
-        for i in range(self.ROWS + 1):
-            horizontal_guides.append(
+            formatted_set_data = [
                 {
-                    "x1": self.MARGIN / 2,
-                    "x2": self.MARGIN * 0.8,
-                    "y1": self.MARGIN + i * self.delta_y,
-                    "y2": self.MARGIN + i * self.delta_y,
+                    "set_name": defaults.RENAME_SETS.get(mtg_set["name"], mtg_set["name"]),
+                    "set_id": mtg_set["id"],
+                    "set_code": mtg_set["code"].upper(),
+                    "set_date": datetime.strptime(
+                        mtg_set["released_at"], "%Y-%m-%d"
+                    ).strftime("%b %Y"),
+                    "set_icon": self.get_set_icon(mtg_set["id"], mtg_set["icon_svg_uri"]),
+                    "pip_icon": pip,
+                    **next(template_offsets_cycle),
                 }
-            )
-            horizontal_guides.append(
-                {
-                    "x1": self.width - self.MARGIN / 2,
-                    "x2": self.width - self.MARGIN * 0.8,
-                    "y1": self.MARGIN + i * self.delta_y,
-                    "y2": self.MARGIN + i * self.delta_y,
-                }
-            )
+                for mtg_set in set_data
+                for pip in colour_pips
+            ]
+            logging.debug(f"Formatted set data with pips: {formatted_set_data}")
 
-        return horizontal_guides
+        else:
+            logging.debug("Generating set data without colour pips")
 
-    def create_vertical_cutting_guides(self):
-        """Create horizontal cutting guides to help cut the labels out straight"""
-        vertical_guides = []
-        for i in range(self.COLS + 1):
-            vertical_guides.append(
+            formatted_set_data = [
                 {
-                    "x1": self.MARGIN + i * self.delta_x,
-                    "x2": self.MARGIN + i * self.delta_x,
-                    "y1": self.MARGIN / 2,
-                    "y2": self.MARGIN * 0.8,
+                    "set_name": defaults.RENAME_SETS.get(
+                        mtg_set["name"], mtg_set["name"]
+                    ),
+                    "set_id": mtg_set["id"],
+                    "set_code": mtg_set["code"].upper(),
+                    "set_date": datetime.strptime(
+                        mtg_set["released_at"], "%Y-%m-%d"
+                    ).strftime("%b %Y"),
+                    "set_icon": self.get_set_icon(
+                        mtg_set["id"], mtg_set["icon_svg_uri"]
+                    ),
+                    **next(template_offsets_cycle),
                 }
-            )
-            vertical_guides.append(
-                {
-                    "x1": self.MARGIN + i * self.delta_x,
-                    "x2": self.MARGIN + i * self.delta_x,
-                    "y1": self.height - self.MARGIN / 2,
-                    "y2": self.height - self.MARGIN * 0.8,
-                }
-            )
+                for mtg_set in set_data
+            ]
+            logging.debug(f"Formatted set data: {formatted_set_data}")
 
-        return vertical_guides
+        return formatted_set_data
 
 
 def main():
-    generator = LabelGenerator(args.paper_size, args.output_dir)
-    generator.generate_labels(args.sets)
+    generator = SetDividers(args.paper_size, args.output_dir)
+    generator.generate_dividers(args.sets)
 
 
 if __name__ == "__main__":
