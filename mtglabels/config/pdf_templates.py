@@ -1,7 +1,12 @@
-from config import defaults
+from mtglabels.config import defaults
 
-icon_label_margin = 2
-text_label_margin = 1
+icon_margin_x = 2
+icon_margin_y = 2
+icon_size = 7
+
+text_line_margin_x = 1
+text_line_1_margin_y = 7
+text_line_2_margin_y = 15
 cut_line_length = 2
 
 label_elements = [
@@ -72,8 +77,8 @@ label_elements = [
     {
         "name": "text_line_1",
         "type": "T",
-        "x1": text_label_margin,
-        "y1": 10,
+        "x1": text_line_margin_x,
+        "y1": text_line_1_margin_y,
         "x2": 0,
         "y2": 0,
         "size": 10,
@@ -82,8 +87,8 @@ label_elements = [
     {
         "name": "text_line_2",
         "type": "T",
-        "x1": text_label_margin,
-        "y1": 20,
+        "x1": text_line_margin_x,
+        "y1": text_line_2_margin_y,
         "x2": 0,
         "y2": 0,
         "size": 8,
@@ -92,19 +97,19 @@ label_elements = [
     {
         "name": "set_icon",
         "type": "I",
-        "x1": defaults.DIVIDER_WIDTH - icon_label_margin - 8,
-        "y1": 4,
-        "x2": defaults.DIVIDER_WIDTH - 7 - icon_label_margin - 8,
-        "y2": 7 + 4,
+        "x1": defaults.DIVIDER_WIDTH - icon_size - icon_margin_x - 8,
+        "y1": icon_margin_y,
+        "x2": defaults.DIVIDER_WIDTH - icon_margin_x - 8,
+        "y2": icon_size + icon_margin_y,
         "keep_aspect_ratio": True,
     },
     {
         "name": "pip_icon",
         "type": "I",
-        "x1": defaults.DIVIDER_WIDTH - icon_label_margin,
-        "y1": 4,
-        "x2": defaults.DIVIDER_WIDTH - 7 - icon_label_margin,
-        "y2": 7 + 4,
+        "x1": defaults.DIVIDER_WIDTH - icon_size - icon_margin_x,
+        "y1": icon_margin_y,
+        "x2": defaults.DIVIDER_WIDTH - icon_margin_x,
+        "y2": icon_size + icon_margin_y,
         "keep_aspect_ratio": True,
     },
 ]
@@ -177,8 +182,8 @@ label_elements_no_pips = [
     {
         "name": "text_line_1",
         "type": "T",
-        "x1": text_label_margin,
-        "y1": 10,
+        "x1": text_line_margin_x,
+        "y1": text_line_1_margin_y,
         "x2": 0,
         "y2": 0,
         "size": 10,
@@ -187,8 +192,8 @@ label_elements_no_pips = [
     {
         "name": "text_line_2",
         "type": "T",
-        "x1": text_label_margin,
-        "y1": 20,
+        "x1": text_line_margin_x,
+        "y1": text_line_2_margin_y,
         "x2": 0,
         "y2": 0,
         "size": 8,
@@ -197,10 +202,10 @@ label_elements_no_pips = [
     {
         "name": "set_icon",
         "type": "I",
-        "x1": defaults.DIVIDER_WIDTH - icon_label_margin,
-        "y1": 4,
-        "x2": defaults.DIVIDER_WIDTH - 7 - icon_label_margin,
-        "y2": 7 + 4,
+        "x1": defaults.DIVIDER_WIDTH - icon_size - icon_margin_x,
+        "y1": icon_margin_y,
+        "x2": defaults.DIVIDER_WIDTH - icon_margin_x,
+        "y2": icon_size + icon_margin_y,
         "keep_aspect_ratio": True,
     },
 ]

@@ -10,7 +10,6 @@ DIVIDER_WIDTH = 65
 DIVIDER_HEIGHT = 95
 
 # Page Layout Settings
-PAGE_OFFSET = 5
 LABELS_PER_ROW = 4
 LABELS_PER_COLUMN = 2
 LABELS_PER_PAGE = LABELS_PER_ROW * LABELS_PER_COLUMN
@@ -18,14 +17,15 @@ LABELS_PER_PAGE = LABELS_PER_ROW * LABELS_PER_COLUMN
 DEFAULT_PAPER_SIZE = "A4"
 PAPER_SIZES = {
     "letter": {
-        "width": 2790,
-        "height": 2160,
-    },  # in 1/10 mm
+        "width": 279,
+        "height": 216,
+    },
     "a4": {
-        "width": 2970,
-        "height": 2100,
+        "width": 297,
+        "height": 210,
     },
 }
+
 
 # Only include sets at least this size
 # For reference, the smallest proper expansion is Arabian Nights with 78 cards
@@ -96,11 +96,11 @@ RENAME_SETS = {
     "Duel Decks: Elves vs. Inventors": "DD: Elves vs. Inventors",
     "Duel Decks: Garruk vs. Liliana": "DD: Garruk vs. Liliana",
     "Duel Decks: Heroes vs. Monsters": "DD: Heroes vs. Monsters",
-    "Duel Decks: Izzet vs. Golgari": "Duel Decks: Izzet vs. Golgari",
+    "Duel Decks: Izzet vs. Golgari": "DD: Izzet vs. Golgari",
     "Duel Decks: Jace vs. Chandra": "DD: Jace vs. Chandra",
     "Duel Decks: Knights vs. Dragons": "DD: Knights vs. Dragons",
     "Duel Decks: Merfolk vs. Goblins": "DD: Merfolk vs. Goblins",
-    "Duel Decks: Mirrodin Pure vs. New Phyrexia": "DD: Mirrodin vs.New Phyrexia",
+    "Duel Decks: Mirrodin Pure vs. New Phyrexia": "DD: Mirrodin vs.N Phyrexia",
     "Duel Decks: Nissa vs. Ob Nixilis": "DD: Nissa vs. Ob Nixilis",
     "Duel Decks: Phyrexia vs. the Coalition": "DD: Phyrexia vs. Coalition",
     "Duel Decks: Speed vs. Cunning": "DD: Speed vs. Cunning",
@@ -112,12 +112,12 @@ RENAME_SETS = {
     "Introductory Two-Player Set": "Intro Two-Player Set",
     "Kaldheim Commander": "CMDR: Kaldheim",
     "March of the Machine Commander": "CMDR: March of the Machine",
-    "March of the Machine: The Aftermath": "March of the Machine: Aftermath",
+    "March of the Machine: The Aftermath": "MOM: Aftermath",
     "Midnight Hunt Commander": "CMDR: Midnight Hunt",
     "Mystery Booster Playtest Cards 2019": "MB Playtest Cards 2019",
     "Mystery Booster Playtest Cards 2021": "MB Playtest Cards 2021",
     "Mystery Booster Playtest Cards": "Mystery Booster Playtest",
-    "Mystery Booster Retail Edition Foils": "Mystery Booster Retail Foils",
+    "Mystery Booster Retail Edition Foils": "Mystery Booster Foils",
     "Neon Dynasty Commander": "CMDR: Neon Dynasty",
     "New Capenna Commander": "CMDR: New Capenna",
     "Phyrexia: All Will Be One Commander": "CMDR: Phyrexia",
@@ -132,7 +132,7 @@ RENAME_SETS = {
     "The Brothers' War Commander": "CMDR: Brothers' War",
     "The Brothers' War Retro Artifacts": "Brothers' War Retro",
     "The Lord of the Rings: Tales of Middle-earth": "LOTR: Tales of Middle-earth",
-    "The Lost Caverns of Ixalan Commander": "CMDR: Lost Caverns of Ixalan",
+    "The Lost Caverns of Ixalan Commander": "CMDR: Lost Caverns Ixalan",
     "Warhammer 40,000 Commander": "CMDR: Warhammer 40K",
     "Wilds of Eldraine Commander": "CMDR: Wilds of Eldraine",
     "Wilds of Eldraine: Enchanting Tales": "WOE: Enchanting Tales",
@@ -146,3 +146,5 @@ RENAME_SETS = {
     "World Championship Decks 2004": "World Championship 2004",
     "Zendikar Rising Commander": "CMDR: Zendikar Rising",
 }
+
+# Regex to find string longer than 26 characters - ": ".{26,}"

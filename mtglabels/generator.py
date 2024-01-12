@@ -7,10 +7,11 @@ from pathlib import Path
 
 import requests
 from cairosvg import svg2png
-from config import defaults, pdf_templates
-from config.utils import setup_args, setup_logger
 from fpdf import FPDF, FlexTemplate
 from PIL import Image, ImageOps
+
+from mtglabels.config import defaults, pdf_templates
+from mtglabels.config.utils import setup_args, setup_logger
 
 BASE_DIR = Path(os.path.abspath(os.path.dirname(__file__)))
 
@@ -25,7 +26,7 @@ class SetDividers:
         self.minimum_set_size = defaults.MINIMUM_SET_SIZE
 
         self.output_dir = Path(output_dir)
-        self.output_name = datetime.now().strftime("%Y-%M-%d") + "-set_dividers.pdf"
+        self.output_name = datetime.now().strftime("%Y-%m-%d") + "-set_dividers.pdf"
 
     def new_page_check(self, pdf, label_count):
         if label_count > 0 and label_count % defaults.LABELS_PER_PAGE == 0:
@@ -55,12 +56,14 @@ class SetDividers:
 
         return set_icon_filename
 
-    def generate_dividers(self, sets=None):
-        if sets:
+    def generate_dividers(self, mtg_sets=None):
+        if mtg_sets:
             self.ignored_sets = ()
             self.minimum_set_size = 0
             self.set_types = ()
-            self.set_codes = [exp.lower() for exp in sets]
+            self.set_codes = [mtg_set.lower() for mtg_set in mtg_sets]
+
+            logging.debug(f"Sets: {self.set_codes}")
 
         pdf = FPDF(orientation="landscape", format=self.paper_size)
         logging.debug("Creating initial page")
@@ -71,11 +74,12 @@ class SetDividers:
         else:
             template = FlexTemplate(pdf, pdf_templates.label_elements_no_pips)
 
-        set_data = self.format_set_data()
+        set_data = self.get_set_data()
+        formatted_set_data = self.format_set_data(set_data)
 
         label_count = 0
 
-        for mtg_set in set_data:
+        for mtg_set in formatted_set_data:
             logging.debug(f"Writing Label {label_count}")
             label_count = self.new_page_check(pdf, label_count)
 
@@ -100,10 +104,21 @@ class SetDividers:
         return pips
 
     def calculate_template_offsets(self):
+
+        if args.disable_offset:
+            x_page_offset = 0
+            y_page_offset = 0
+        else:
+            logging.debug("Calculating page offset values")
+            x_page_offset = ( defaults.PAPER_SIZES[self.paper_size]["width"] - ( defaults.DIVIDER_WIDTH * defaults.LABELS_PER_ROW ) ) / 2
+            y_page_offset = ( defaults.PAPER_SIZES[self.paper_size]["height"] - ( defaults.DIVIDER_HEIGHT * defaults.LABELS_PER_COLUMN ) ) / 2
+
+        logging.debug(f"Page offset values: {x_page_offset}, {y_page_offset}")
+
         template_offsets = [
             {
-                "x_offset": col * defaults.DIVIDER_WIDTH + defaults.PAGE_OFFSET,
-                "y_offset": row * defaults.DIVIDER_HEIGHT + defaults.PAGE_OFFSET,
+                "x_offset": col * defaults.DIVIDER_WIDTH + x_page_offset,
+                "y_offset": row * defaults.DIVIDER_HEIGHT + y_page_offset,
             }
             for row in range(defaults.LABELS_PER_COLUMN)
             for col in range(defaults.LABELS_PER_ROW)
@@ -179,13 +194,11 @@ class SetDividers:
                 logging.debug(f"Set icon downloaded: {set_icon_filename}")
                 return processed_icon
 
-    def format_set_data(self):
+    def format_set_data(self, set_data):
         """
         Create the label data for the sets
         """
 
-        # Get set data from scryfall
-        set_data = self.get_set_data()
         template_offsets_cycle = cycle(self.calculate_template_offsets())
 
         if args.pips:
