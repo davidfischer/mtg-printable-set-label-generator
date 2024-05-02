@@ -92,10 +92,12 @@ RENAME_SETS = {
     "Introductory Two-Player Set": "Intro Two-Player Set",
     "March of the Machine: The Aftermath": "MotM: The Aftermath",
     "March of the Machine Commander": "March of the Machine [C]",
+    "Murders at Karlov Manor Commander": "Murders at Karlov Manor [C]",
     "Mystery Booster Playtest Cards": "Mystery Booster Playtest",
     "Mystery Booster Playtest Cards 2019": "MB Playtest Cards 2019",
     "Mystery Booster Playtest Cards 2021": "MB Playtest Cards 2021",
     "Mystery Booster Retail Edition Foils": "Mystery Booster Retail Foils",
+    "Outlaws of Thunder Junction Commander": "Outlaws of Thunder Junction [C]",
     "Phyrexia: All Will Be One Commander": "Phyrexia: All Will Be One [C]",
     "Planechase Anthology Planes": "Planechase Anth. Planes",
     "Premium Deck Series: Slivers": "Premium Deck Slivers",
@@ -107,7 +109,8 @@ RENAME_SETS = {
     "The Brothers' War Retro Artifacts": "Brothers' War Retro",
     "The Brothers' War Commander": "Brothers' War Commander",
     "The Lord of the Rings: Tales of Middle-earth": "LOTR: Tales of Middle-earth",
-    "Warhammer 40,000 Commander": "Warhammer 40K",
+    "The Lost Caverns of Ixalan Commander": "The Lost Caverns of Ixalan [C]",
+    "Warhammer 40,000 Commander": "Warhammer 40K [C]",
     "Wilds of Eldraine Commander": "Wilds of Eldraine [C]",
     "World Championship Decks 1997": "World Championship 1997",
     "World Championship Decks 1998": "World Championship 1998",
@@ -131,8 +134,8 @@ class LabelGenerator:
     START_Y = MARGIN
 
     PAPER_SIZES = {
-        "letter": {"width": 2790, "height": 2160,},  # in 1/10 mm
-        "a4": {"width": 2970, "height": 2100,},
+        "letter": {"width": 2790, "height": 2160, },  # in 1/10 mm
+        "a4": {"width": 2970, "height": 2100, },
     }
     DEFAULT_PAPER_SIZE = "letter"
 
