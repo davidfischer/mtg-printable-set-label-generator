@@ -2,11 +2,9 @@ import argparse
 import base64
 import logging
 import os
-import subprocess
 from datetime import datetime
 from pathlib import Path
 
-import cairosvg
 import jinja2
 import requests
 
@@ -14,11 +12,17 @@ import requests
 log = logging.getLogger(__name__)
 
 BASE_DIR = Path(os.path.abspath(os.path.dirname(__file__)))
+CAIRO_DLL_DIR = r'C:\Program Files\GTK3-Runtime Win64\bin'
 
 ENV = jinja2.Environment(
     loader=jinja2.FileSystemLoader(BASE_DIR / "templates"),
     autoescape=jinja2.select_autoescape(["html", "xml"]),
 )
+
+# Windows-specific: Before importing cairosvg, need to add cairo dlls, otherwise importing fails
+# https://github.com/Kozea/CairoSVG/issues/392#issuecomment-1631288142
+getattr(os, 'add_dll_directory', lambda _: None)(CAIRO_DLL_DIR)
+import cairosvg
 
 # Set types we are interested in
 SET_TYPES = (
@@ -139,8 +143,8 @@ class LabelGenerator:
     }
     DEFAULT_PAPER_SIZE = "letter"
 
-    def __init__(self, paper_size=None, output_dir=None):
-        self.paper_size = paper_size or DEFAULT_PAPER_SIZE
+    def __init__(self, paper_size=DEFAULT_PAPER_SIZE, output_dir=DEFAULT_OUTPUT_DIR):
+        self.paper_size = paper_size
         paper = self.PAPER_SIZES[paper_size]
 
         self.set_codes = []
@@ -155,7 +159,7 @@ class LabelGenerator:
         self.delta_x = (self.width - (2 * self.MARGIN)) / self.COLS
         self.delta_y = (self.height - (2 * self.MARGIN)) / self.ROWS
 
-        self.output_dir = Path(output_dir or DEFAULT_OUTPUT_DIR)
+        self.output_dir = Path(output_dir)
 
     def generate_labels(self, sets=None):
         if sets:
